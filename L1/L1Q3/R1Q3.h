@@ -8,7 +8,7 @@
 enum	{ INTEIRO	=	-3 , FLOAT , E_CARACTERE};
 
 typedef struct eleLista{
-  int chaveDecimal;
+  float chaveDecimal;
   struct eleLista* prox;
   int index;
 }noSublista;
@@ -36,50 +36,49 @@ typedef struct inicio{
 void verifica_caracter(char *token, int* cont);
 int intOrFloat(double numero);
 void inserirElementoFinal(inicio* lista, int chave, inicioSublista* sublista);
-void inserirElemento(inicioSublista* lista, int chave);
+void inserirElemento(inicioSublista* lista, float chave);
+void impressao(inicio* lista, FILE* fp_out);
 void imprimir(inicio* lista, inicioSublista* subLista, FILE* fp_out);
 void insertionSort(int* vetor, int tam);
-  void insertionSortFloat(float* vetor, int tam);
-// Funções:
+void insertionSortFloat(float* vetor, int tam);
+int contarCasasDecimais(float numero);
+void liberaMemoria2(inicio* lista);
+
 
 void verifica_caracter(char *token, int* cont){
   if((token[0] > 64 &&	token[0] < 91 ) || (token[0] > 96 &&	token[0] < 123  ))
-     *cont = E_CARACTERE;
+    *cont = E_CARACTERE;
 }
+
 
 int intOrFloat(double numero){
     double fracao;
-    fracao = modf	(numero, &numero); // modf -> é da biblioteca math.h
-
+    fracao = modf	(numero, &numero); 
     if (fracao == 0.0) {
-			//printf("O número é inteiro.\n");
 			return INTEIRO;
-    } else {
-			//printf("O número é float.\n");
+    }else{
 			return FLOAT;
     }
 }
 
+
 void inserirElementoFinal(inicio* lista, int chave, inicioSublista* sublista) {
-  printf("#####1#####\n");
   no* novoElemento = (no*)malloc(sizeof(no));
   if (novoElemento == NULL) {
-      perror("Erro ao alocar memória");
-      return;
+    perror("Erro ao alocar memória");
+    return;
   }
   novoElemento->chaveInteira = chave;
   novoElemento->anterior = NULL;
   novoElemento->prox = NULL;
   novoElemento->index = lista->qtdElementos;
   novoElemento->subLista = sublista;
-
   if (lista->primeiroElemento == NULL) {
       lista->primeiroElemento = novoElemento;
   } else {
       no* atual = lista->primeiroElemento;
       while (atual->prox != NULL) {
-        
-          atual = atual->prox;
+        atual = atual->prox;
       }
       atual->prox = novoElemento;
       novoElemento->anterior = atual;
@@ -87,8 +86,8 @@ void inserirElementoFinal(inicio* lista, int chave, inicioSublista* sublista) {
   lista->qtdElementos++;
 }
 
-void inserirElemento(inicioSublista* lista, int chave) {
-  printf("#####2#####\n");
+
+void inserirElemento(inicioSublista* lista, float chave){
   noSublista* novoElemento = (noSublista*)malloc(sizeof(noSublista));
   if (novoElemento == NULL) {
       perror("Erro ao alocar memória");
@@ -97,13 +96,11 @@ void inserirElemento(inicioSublista* lista, int chave) {
   novoElemento->chaveDecimal = chave;
   novoElemento->prox = NULL;
   novoElemento->index = lista->qtdElementos;
-
   if (lista->primeiroElemento == NULL) {
     lista->primeiroElemento = novoElemento;
   } else {
     noSublista* atual = lista->primeiroElemento;
     while (atual->prox != NULL) {
-      printf("teste\n");
       atual = atual->prox;
     }
     atual->prox = novoElemento;
@@ -111,36 +108,51 @@ void inserirElemento(inicioSublista* lista, int chave) {
   lista->qtdElementos++;
 }
 
-//refazer essa função
-void imprimir(inicio* lista, inicioSublista* subLista, FILE* fp_out){
-  printf("#####3#####\n");
-  no* novoElemento = (no*)malloc(sizeof(no));
-  noSublista* novoSubLista = (noSublista*)malloc(sizeof(noSublista));
-  
-  if (novoElemento == NULL || novoSubLista == NULL) {
-      perror("Erro ao alocar memória");
-      return;
-  }
-  
-  if(lista->primeiroElemento == NULL){
-    //printf("lista principal vazia");
-  }
-  novoElemento = lista->primeiroElemento;
-	
-  while(novoElemento->prox != NULL){
-    printf("-------|1|-----\n");
-    // no* atual = novoElemento->prox;
-    fprintf(fp_out, "[%d(", novoElemento->chaveInteira);
-    novoSubLista = novoElemento->subLista->primeiroElemento;
-    while(novoSubLista->index < novoElemento->subLista->qtdElementos){
-      printf("-------|2|-----\n");
-      // noSublista* atualSub = novoSubLista;
-      fprintf(fp_out, "%d", novoSubLista->chaveDecimal);
-      novoSubLista = novoSubLista->prox;
-      if(novoSubLista->index < novoElemento->subLista->qtdElementos)
+
+void impressao(inicio* lista, FILE* fp_out){
+  no* novo = (no*)malloc(sizeof(no));
+  novo = lista->primeiroElemento;
+  fprintf(fp_out, "[");
+  int cont = 0;
+  while(novo != NULL){
+    if(cont != 0)
+      fprintf(fp_out, "->%d(", novo->chaveInteira);
+    else
+      fprintf(fp_out, "%d(", novo->chaveInteira);
+    inicioSublista* inicioSub = (inicioSublista*)malloc(sizeof(inicioSublista));
+    noSublista* novoSublista = (noSublista*)malloc(sizeof(noSublista));
+    inicioSub = novo->subLista;
+    novoSublista = inicioSub->primeiroElemento;
+    int contSub = 0;
+    int casasDecimais = 0;
+    char formato[20];
+    while(novoSublista != NULL){
+      if(contSub != 0){
+        casasDecimais = contarCasasDecimais(novoSublista->chaveDecimal);
+        if(casasDecimais > 2)
+          fprintf(fp_out, "->%.2f", novoSublista->chaveDecimal);
+        else{
+        sprintf(formato, "%%.%df", casasDecimais);
         fprintf(fp_out, "->");
+        fprintf(fp_out, formato, novoSublista->chaveDecimal);
+        }
+      }else{
+        casasDecimais = contarCasasDecimais(novoSublista->chaveDecimal);
+        if(casasDecimais > 2)
+          fprintf(fp_out, "%.2f", novoSublista->chaveDecimal);
+        else{
+        sprintf(formato, "%%.%df", casasDecimais);
+        fprintf(fp_out, formato, novoSublista->chaveDecimal);
+        }
+      }
+      novoSublista = novoSublista->prox;
+      contSub++;
     }
+    fprintf(fp_out, ")");
+    novo = novo->prox;
+    cont++;
   }
+  fprintf(fp_out, "]");
 }
 
 
@@ -157,6 +169,7 @@ void insertionSort(int* vetor, int tam) {
   }
 }
 
+
 void insertionSortFloat(float* vetor, int tam) {
   int j;
   for (j = 1; j < tam; j++) {
@@ -168,4 +181,33 @@ void insertionSortFloat(float* vetor, int tam) {
     }
     vetor[i + 1] = key;
   }
+}
+
+
+int contarCasasDecimais(float numero) {
+  int casasDecimais = 0;
+  while (fabs(numero - round(numero)) > 0) {
+    numero *= 10;
+    casasDecimais++;
+  }
+  return casasDecimais;
+}
+
+
+void liberaMemoria(inicio* lista){
+  no* novo = lista->primeiroElemento;
+  while(novo->prox != NULL){
+    inicioSublista* inicioSub = novo->subLista;
+    noSublista* subLista = inicioSub->primeiroElemento;
+    while(subLista != NULL){
+      noSublista* proxSub = subLista->prox;
+      free(subLista);
+      subLista = proxSub;
+    }
+    inicioSub->primeiroElemento = NULL;
+    no* prox = novo->prox;
+    free(novo);
+    novo = prox;
+  }
+  lista->primeiroElemento = NULL;
 }

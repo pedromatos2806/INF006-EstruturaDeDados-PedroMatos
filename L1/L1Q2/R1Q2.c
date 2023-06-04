@@ -1,7 +1,7 @@
 #include "R1Q2.h"
 
 int main() {
-	char linha[256];
+	char linha[257];
   int cont = 0;
 	FILE *fp_in = fopen("L1Q2.in", "r");
 	FILE *fp_out = fopen("L1Q2.out", "w");
@@ -10,7 +10,7 @@ int main() {
 		return EXIT_FAILURE;
 	}
 
-	while (fgets(linha, 256, fp_in) != NULL) { // esse while lê até 
+	while (fgets(linha, 257, fp_in) != NULL) { // esse while lê até 
 		int tamlinha = strlen(linha); // contando quantos caracteres tem na linha 
 		int contQuebralinha	=	0;
 		int equaleLinha=0;
